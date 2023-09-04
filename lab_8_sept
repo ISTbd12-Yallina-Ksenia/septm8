@@ -1,0 +1,164 @@
+import random
+import re
+from tkinter import *
+from tkinter import ttk
+def function():
+    B=int(entry_1.get()) #получение введенных значений
+    U=int(entry_2.get())
+    Pl=int(entry_3.get())
+    P=int(entry_4.get())
+    combination=Generate()
+    blouse=Cloth("B", B) #создаем объекты (элементы) одежды каждого типа
+    skirt=Cloth("U", U)
+    jacket=Cloth("P", P)
+    dress=Cloth("Pl", Pl)
+    blouse.elem_type_cloth() #формируем список из n количества элементов одежды каждого типа
+    skirt.elem_type_cloth()
+    jacket.elem_type_cloth()
+    dress.elem_type_cloth()
+    combination.establish_prices(blouse.elements+skirt.elements+jacket.elements+dress.elements) #устан-ем цены на каждый эл-т одежды каждого типа
+    combination.generate_iterative(blouse, skirt) #решаем итеративно 
+    combination.generate_iterative(jacket, dress)
+    text_result.insert("1.0", f"Итерационное решение\nСамый дорогой наряд: {combination.attire}."
+                       f"Его цена:{combination.max_price_of_attire}. Все наряды в количестве {combination.count_iterative} штук: {massive_1}\n")
+    combination.generate_recursive(blouse.elements+skirt.elements, 2, 2, k=[]) #решаем рекурсивно
+    combination.generate_recursive(jacket.elements+dress.elements, 2, 2, k=[])
+    text_result.insert(END, f"Рекурсивное решение\nСамый дорогой наряд:{combination.attire}."
+                       f"Его цена: {combination.max_price_of_attire}. Все наряды в количестве {combination.count_recursive} штук: {massive_2}")
+    text_result.configure(state=DISABLED)
+
+def clear_text(): #очистить поле
+    text_result.configure(state=NORMAL)
+    text_result.delete("1.0", END)
+    entry_1.delete(0, END)
+    entry_2.delete(0, END)
+    entry_3.delete(0, END)
+    entry_4.delete(0, END)
+    global massive, massive_2
+    massive=[]
+    massive_2=[]
+
+def is_valid(newval): #проверка правильности вводимых значений
+    result=re.search("^\d*$", newval) is not None
+    if not result:
+        errmsg.set("Введите целые числа!")
+    else:
+        errmsg.set("")
+    return result
+massive_1=[]
+massive_2=[]
+class Cloth: #класс для формирования элементов одежды
+    def __init__(self, name, count): #создаем элемент одежды
+        self.name=name
+        self.count_of_elements=count
+        self.elements=[]
+    def elem_type_cloth(self): #элементов одежды каждого типа может быть n штук. формируем список всех элементов одеждый одного типа
+        for i in range(self.count_of_elements):
+            self.elements.append("{}_{}".format(self.name, i+1))
+class Generate: #класс для генерации сочетаний элементов одежды
+    def __init__(self):
+        self.count_recursive=0 #количество возможных нарядов, посчитанных рекурсивно
+        self.count_iterative=0 #то же самое, но итерационно
+        self.attire=[] #самый дорогой наряд
+        self.max_price_of_attire=0 #его стоимость
+        self.price_of_each_element={} #словарь с ценами каждого элемента одежды каждого типа
+    def establish_prices(self, arr): #устанавливаем цены на каждый эл-т одежды каждого типа
+        for i in arr:
+            self.price_of_each_element[i]=random.randint(400,7000)
+    def purpose_function(self, arr, sum_price=0): #целевая функция для нахождения самого дорогого наряда и его стоимости
+        for i in arr:
+            sum_price+=self.price_of_each_element.get(i)
+        if sum_price>self.max_price_of_attire:
+              self.max_price_of_attire=sum_price
+              self.attire=arr.copy()
+        sum_price=0
+    def generate_iterative(self, ex1, ex2, count_1=0, count_2=0): #итеративная функция для поиска всех возможных сочетаний
+        while count_2<(len(ex2.elements)):
+           if count_1<len(ex1.elements):
+              arr=[ex1.elements[count_1], ex2.elements[count_2]]
+              self.count_iterative+=1
+              self.purpose_function(arr)
+              count_2+=1
+              massive_1.append(arr)
+              if count_2==len(ex2.elements):
+                   count_2=0
+                   count_1+=1
+              if count_1==len(ex1.elements):
+                 break
+    def generate_recursive(self, arr, num, num2, k=[]): #рекурсивная функция для поиска всех возможных сочетаний
+        if num == 0:  
+            return [[]] 
+        l =[]  
+        for j in range(0, len(arr)):  
+            first = arr[j] 
+            rest = arr[j + 1:] 
+            for x in self.generate_recursive(rest, num-1, num2):
+                l.append([first]+x)
+                if len(l[0])==num2:
+                    for m in range(num2):
+                        k.append(l[0][m])
+                    for i in range(len(k)):
+                        indexs=k[i].index('_')
+                        k[i]=k[i][0:indexs]
+                    if num2==len(set(k)):
+                        massive_2.append(l[0])
+                        self.count_recursive+=1
+                        self.purpose_function(l[0]) 
+                    l=[]
+                    k=[]      
+        return l
+
+root=Tk()
+root.title("Work №8 /1")
+root.geometry("550x550")
+root["background"]="snow2"
+for c in range(2): root.columnconfigure(index=c, weight=1)
+for r in range(7): root.rowconfigure(index=r, weight=1)
+
+check = (root.register(is_valid), "%P")
+
+inf_label=ttk.Label(text="Введите количество элементов одежды", background="snow2")
+inf_label.grid(row=0, column=0, sticky=W)
+
+label_1=ttk.Label(text="Блузки (B)", background="snow2")
+label_1.grid(row=1,column=0, sticky=W)
+
+label_2=ttk.Label(text="Юбки (U)", background="snow2")
+label_2.grid(row=2,column=0, sticky=W)
+
+label_3=ttk.Label(text="Платья (Pl)", background="snow2")
+label_3.grid(row=3,column=0, sticky=W)
+
+label_4=ttk.Label(text="Пиджаки (P)", background="snow2")
+label_4.grid(row=4,column=0, sticky=W)
+
+entry_1=ttk.Entry(validate="key", validatecommand=check)
+entry_1.grid(row=1, column=1, sticky=W)
+
+entry_2=ttk.Entry(validate="key", validatecommand=check)
+entry_2.grid(row=2, column=1, sticky=W)
+
+entry_3=ttk.Entry(validate="key", validatecommand=check)
+entry_3.grid(row=3, column=1, sticky=W)
+
+entry_4=ttk.Entry(validate="key", validatecommand=check)
+entry_4.grid(row=4, column=1, sticky=W)
+
+button_1=ttk.Button(text="Выполнить", command=function)
+button_1.grid(row=5, column=1, sticky=W)
+
+button_2=ttk.Button(text="Очистить", command=clear_text)
+button_2.grid(row=5, column=1, padx=90, sticky=W)
+
+inf2_label=ttk.Label(text="Нажмите 'Выполнить', чтобы найти решение \nзадачи," + 
+                    " и 'Очистить', чтобы очистить \nполя для новых вычислений", background="snow2")
+inf2_label.grid(row=5, column=0, sticky=EW)
+
+text_result=Text(height=20, bg="seashell2")
+text_result.grid(row=6, column=0, columnspan=2, sticky=NSEW)
+
+errmsg = StringVar()
+error_label = ttk.Label(foreground="red", textvariable=errmsg, wraplength=250, background="snow2")
+error_label.grid(row=0, column=1, sticky=W)
+
+root.mainloop()
