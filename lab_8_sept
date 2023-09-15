@@ -39,8 +39,8 @@ def clear_text(): #очистить поле
     entry_2.delete(0, END)
     entry_3.delete(0, END)
     entry_4.delete(0, END)
-    global massive, massive_2
-    massive=[]
+    global massive_1, massive_2
+    massive_1=[]
     massive_2=[]
 
 def is_valid(newval): #проверка правильности вводимых значений
