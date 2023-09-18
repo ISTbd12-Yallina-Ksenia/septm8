@@ -60,6 +60,8 @@ class Cloth: #класс для формирования элементов од
     def elem_type_cloth(self): #элементов одежды каждого типа может быть n штук. формируем список всех элементов одеждый одного типа
         for i in range(self.count_of_elements):
             self.elements.append("{}_{}".format(self.name, i+1))
+        if self.count_of_elements == 0:
+            self.elements = ['']
 class Generate: #класс для генерации сочетаний элементов одежды
     def __init__(self):
         self.count_recursive=0 #количество возможных нарядов, посчитанных рекурсивно
@@ -81,15 +83,19 @@ class Generate: #класс для генерации сочетаний эле�
         while count_2<(len(ex2.elements)):
            if count_1<len(ex1.elements):
               arr=[ex1.elements[count_1], ex2.elements[count_2]]
-              self.count_iterative+=1
+              if '' in arr:
+                  while '' in arr:
+                      arr.remove('')
               self.purpose_function(arr)
               count_2+=1
-              massive_1.append(arr)
+              if arr != []:
+                  self.count_iterative+=1
+                  massive_1.append(arr)
               if count_2==len(ex2.elements):
                    count_2=0
                    count_1+=1
               if count_1==len(ex1.elements):
-                 break
+                  break
     def generate_recursive(self, arr, num, num2, k=[]): #рекурсивная функция для поиска всех возможных сочетаний
         if num == 0:  
             return [[]] 
@@ -103,9 +109,13 @@ class Generate: #класс для генерации сочетаний эле�
                     for m in range(num2):
                         k.append(l[0][m])
                     for i in range(len(k)):
-                        indexs=k[i].index('_')
-                        k[i]=k[i][0:indexs]
+                        if k[i] != '':
+                            indexs=k[i].index('_')
+                            k[i]=k[i][0:indexs]
                     if num2==len(set(k)):
+                        if '' in l[0]:
+                            while '' in l[0]:
+                                l[0].remove('')
                         massive_2.append(l[0])
                         self.count_recursive+=1
                         self.purpose_function(l[0]) 
